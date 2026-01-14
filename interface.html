@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>ShopEase — Internal Store</title>
+  <style>
+    :root{
+      --brand:#4A90E2;
+      --brand-dark:#357ABD;
+      --bg1:#1e3a8a; --bg2:#6d28d9; --bg3:#0ea5e9;
+      --text:#e5e7eb; --muted:#cbd5e1;
+      --card:#0b1220; --border:rgba(255,255,255,0.12);
+      --danger:#ef4444; --success:#22c55e;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif; color:var(--text);
+      background:linear-gradient(135deg,var(--bg1),var(--bg2) 60%,var(--bg3));
+      min-height:100vh;
+    }
+    header{
+      position:sticky; top:0; z-index:10; backdrop-filter:blur(8px);
+      background:rgba(10,15,25,0.55); border-bottom:1px solid var(--border);
+    }
+    .nav{
+      max-width:1100px; margin:0 auto; padding:14px 20px;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .brand{display:flex; align-items:center; gap:10px; font-weight:800; font-size:20px}
+    .logo{
+      width:34px; height:34px; border-radius:8px; display:grid; place-items:center; color:#fff; font-weight:900;
+      background:linear-gradient(135deg,var(--brand),#8b5cf6); box-shadow:0 6px 18px rgba(74,144,226,0.35);
+    }
+    .actions{display:flex; gap:10px}
+    .btn{
+      padding:10px 14px; border-radius:8px; border:1px solid var(--border);
+      background:rgba(255,255,255,0.06); color:#fff; cursor:pointer; transition:.2s; font-weight:600;
+    }
+    .btn:hover{background:rgba(255,255,255,0.12)}
+    .btn-primary{background:var(--brand); border:none}
+    .btn-primary:hover{background:var(--brand-dark)}
+    .container{max-width:1100px; margin:24px auto; padding:0 20px}
+    h2{margin:0 0 12px}
+    .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:18px}
+    .card{
+      background:rgba(12,18,30,0.75); border:1px solid var(--border); border-radius:14px; overflow:hidden;
+      display:flex; flex-direction:column; box-shadow:0 10px 24px rgba(0,0,0,0.35);
+    }
+    .card img{width:100%; height:170px; object-fit:cover; background:#0b1220}
+    .card-body{padding:14px; display:flex; flex-direction:column}
+    .title{font-weight:700; margin:4px 0 6px}
+    .desc{color:var(--muted); font-size:14px; line-height:1.4; margin-bottom:10px}
+    .price-row{display:flex; align-items:center; justify-content:space-between; margin-top:auto}
+    .price{font-weight:800}
+    .add{margin-top:10px}
+    footer{color:#cbd5e1; text-align:center; padding:20px 0}
+
+    /* Drawer */
+    .drawer{
+      position:fixed; right:0; top:0; height:100vh; width:380px; max-width:92vw;
+      background:rgba(10,15,25,0.95); backdrop-filter:blur(10px);
+      border-left:1px solid var(--border); transform:translateX(100%); transition:transform .25s ease; z-index:20;
+      display:flex; flex-direction:column;
+    }
+    .drawer.open{transform:translateX(0)}
+    .drawer header{padding:16px; border-bottom:1px solid var(--border)}
+    .drawer .content{padding:14px; overflow:auto; flex:1}
+    .cart-item{
+      display:grid; grid-template-columns:56px 1fr auto; gap:10px;
+      padding:10px; border:1px solid var(--border); border-radius:12px; margin-bottom:10px; background:rgba(255,255,255,0.03)
+    }
+    .cart-item img{width:56px; height:56px; object-fit:cover; border-radius:8px}
+    .cart-title{font-weight:700}
+    .cart-meta{color:var(--muted); font-size:13px}
+    .qty-row{display:flex; align-items:center; gap:8px; margin-top:6px}
+    .qty-btn{width:26px; height:26px; border-radius:6px; border:1px solid var(--border); background:transparent; color:#fff; cursor:pointer}
+    .remove{color:#fff; background:var(--danger); border:none; border-radius:6px; padding:6px 10px; cursor:pointer}
+    .summary{border-top:1px solid var(--border); padding:12px 14px}
+    .summary-row{display:flex; justify-content:space-between; margin:6px 0}
+    .checkout-form{border-top:1px solid var(--border); padding:12px 14px; background:rgba(255,255,255,0.02)}
+    .field{margin-bottom:10px}
+    .label{font-size:13px; color:#cbd5e1; margin-bottom:6px}
+    .input{
+      width:100%; padding:10px; border-radius:8px; border:1px solid var(--border);
+      background:rgba(255,255,255,0.06); color:#fff
+    }
+    .order-number{
+      margin-top:10px; padding:10px; border-radius:8px; background:rgba(34,197,94,0.12);
+      color:#86efac; border:1px solid rgba(34,197,94,0.35); font-weight:700
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <div class="brand"><div class="logo">SE</div><div>ShopEase</div></div>
+      <div class="actions">
+        <button class="btn" id="viewCartBtn">View Cart</button>
+        <button class="btn-primary" id="checkoutBtn">Checkout</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <h2>Featured products</h2>
+    <p class="desc" style="margin:6px 0 16px">Add items to your cart and proceed to checkout—order number is generated automatically.</p>
+    <section class="grid" id="productGrid"></section>
+  </main>
+
+  <footer>© <span id="year"></span> ShopEase. All rights reserved.</footer>
+
+  <!-- Drawer: Cart + Checkout -->
+  <aside class="drawer" id="drawer">
+    <header><h3 style="margin:0">Cart & Checkout</h3></header>
+    <div class="content">
+      <div id="cartList"></div>
+
+      <div class="summary">
+        <div class="summary-row"><span>Items</span><strong id="summaryItems">0</strong></div>
+        <div class="summary-row"><span>Subtotal</span><strong id="summarySubtotal">PKR 0</strong></div>
+      </div>
+
+      <form class="checkout-form" id="checkoutForm">
+        <div class="field">
+          <div class="label">Name</div>
+          <input class="input" type="text" id="custName" placeholder="Your full name" required/>
+        </div>
+        <div class="field">
+          <div class="label">Address</div>
+          <input class="input" type="text" id="custAddress" placeholder="Street, City, Postal code" required/>
+        </div>
+        <div class="field">
+          <div class="label">Contact number</div>
+          <input class="input" type="tel" id="custContact" placeholder="03XX-XXXXXXX" required/>
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%;margin-top:6px">Place order</button>
+        <div id="orderNumber" class="order-number" style="display:none;"></div>
+      </form>
+    </div>
+  </aside>
+
+  <script>
+    const currency = (n)=>`PKR ${n.toLocaleString()}`;
+
+    const products = [
+      {id:1, title:"Wireless Earbuds Pro", price:5499, img:"https://images.unsplash.com/photo-1585386959984-a41552231658?q=80&w=800&auto=format&fit=crop", desc:"Noise-cancelling, 24h battery, Bluetooth 5.3."},
+      {id:2, title:"Smartwatch Active S", price:11999, img:"https://images.unsplash.com/photo-1603791440384-56cd371ee9a7?q=80&w=800&auto=format&fit=crop", desc:"Heart-rate, GPS, notifications, water-resistant."},
+      {id:3, title:"Gaming Mouse X7", price:3999, img:"https://images.unsplash.com/photo-1612197528505-5a1c2d6a3f6d?q=80&w=800&auto=format&fit=crop", desc:"RGB, 7 buttons, 16K DPI precision."},
+      {id:4, title:"Mechanical Keyboard 60%", price:8999, img:"https://images.unsplash.com/photo-1587202372775-989c0e7f3f3d?q=80&w=800&auto=format&fit=crop", desc:"Hot-swappable, blue switches, compact."},
+      {id:5, title:"Portable Speaker Boom", price:7499, img:"https://images.unsplash.com/photo-1580894894513-79f7c2f5a1b4?q=80&w=800&auto=format&fit=crop", desc:"Deep bass, 12h playtime, splash-proof."},
+      {id:6, title:"4K Action Camera", price:15999, img:"https://images.unsplash.com/photo-1508898578281-774ac4893c0f?q=80&w=800&auto=format&fit=crop", desc:"4K/60fps, stabilization, waterproof case."},
+      {id:7, title:"USB-C Power Bank 20K", price:5999, img:"https://images.unsplash.com/photo-1555617117-08fda9b6a3f3?q=80&w=800&auto=format&fit=crop", desc:"PD fast charge, dual output, slim."},
+      {id:8, title:"Noise-cancel Headphones", price:13999, img:"https://images.unsplash.com/photo-1518443876316-6d5b3f3e4a3b?q=80&w=800&auto=format&fit=crop", desc:"Over-ear comfort, ANC, 30h battery."},
+      {id:9, title:"HD Webcam Stream", price:4999, img:"https://images.unsplash.com/photo-1590608897129-79da98d6d1b3?q=80&w=800&auto=format&fit=crop", desc:"1080p, low-light correction, mic."},
+      {id:10, title:"Laptop Stand Alloy", price:3299, img:"https://images.unsplash.com/photo-1515879218367-8466d910aaa4?q=80&w=800&auto=format&fit=crop", desc:"Ergonomic, foldable, heat-dissipating."}
+    ];
+
+    const productGrid = document.getElementById('productGrid');
+    const cartList = document.getElementById('cartList');
+    const drawer = document.getElementById('drawer');
+    const viewCartBtn = document.getElementById('viewCartBtn');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    const summaryItems = document.getElementById('summaryItems');
+    const summarySubtotal = document.getElementById('summarySubtotal');
+    const checkoutForm = document.getElementById('checkoutForm');
+    const orderNumberEl = document.getElementById('orderNumber');
+
+    const CART_KEY = 'shopease_cart_v1';
+    let cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+
+    function saveCart(){ localStorage.setItem(CART_KEY, JSON.stringify(cart)); }
+
+    function renderProducts(){
+      productGrid.innerHTML = products.map(p => `
+        <article class="card">
+          <img src="${p.img}" alt="${p.title}">
+          <div class="card-body">
+            <div class="title">${p.title}</div>
+            <p class="desc">${p.desc}</p>
+            <div class="price-row">
+              <div class="price">${currency(p.price)}</div>
+              <button class="btn btn-primary add" onclick="addToCart(${p.id})">Add to cart</button>
+            </div>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    function addToCart(id){
+      const item = cart.find(c => c.id === id);
+      if(item){ item.qty += 1; }
+      else{
+        const p = products.find(x => x.id === id);
+        cart.push({id:p.id, title:p.title, price:p.price, img:p.img, qty:1});
+      }
+      saveCart(); renderCart(); openDrawer();
+    }
+
+    function removeFromCart(id){
+      cart = cart.filter(c => c.id !== id);
+      saveCart(); renderCart();
+    }
+
+    function changeQty(id, delta){
+      const item = cart.find(c => c.id === id);
+      if(!item) return;
+      item.qty += delta;
+      if(item.qty <= 0){ removeFromCart(id); return; }
+      saveCart(); renderCart();
+    }
+
+    function renderCart(){
+      if(cart.length === 0){
+        cartList.innerHTML = `<p class="desc">Your cart is empty. Add some products to proceed.</p>`;
+      }else{
+        cartList.innerHTML = cart.map(c => `
+          <div class="cart-item">
+            <img src="${c.img}" alt="${c.title}">
+            <div>
+              <div class="cart-title">${c.title}</div>
+              <div class="cart-meta">${currency(c.price)} • Qty: ${c.qty}</div>
+              <div class="qty-row">
+                <button class="qty-btn" onclick="changeQty(${c.id}, -1)">−</button>
+                <button class="qty-btn" onclick="changeQty(${c.id}, 1)">+</button>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-start;">
+              <button class="remove" onclick="removeFromCart(${c.id})">Remove</button>
+            </div>
+          </div>
+        `).join('');
+      }
+      const items = cart.reduce((a,c)=>a+c.qty,0);
+      const subtotal = cart.reduce((a,c)=>a+(c.price*c.qty),0);
+      summaryItems.textContent = items;
+      summarySubtotal.textContent = currency(subtotal);
+    }
+
+    function openDrawer(){ drawer.classList.add('open'); }
+    function closeDrawer(){ drawer.classList.remove('open'); }
+
+    viewCartBtn.addEventListener('click', openDrawer);
+    checkoutBtn.addEventListener('click', openDrawer);
+
+    checkoutForm.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      if(cart.length === 0){ alert('Your cart is empty.'); return; }
+
+      const name = document.getElementById('custName').value.trim();
+      const address = document.getElementById('custAddress').value.trim();
+      const contact = document.getElementById('custContact').value.trim();
+      if(!name || !address || !contact){ alert('Please fill in all fields.'); return; }
+
+      const orderNumber = generateOrderNumber();
+      orderNumberEl.style.display = 'block';
+      orderNumberEl.textContent = `Order placed! Your order number is: ${orderNumber}`;
+
+      const order = {
+        orderNumber, name, address, contact,
+        items: cart,
+        subtotal: cart.reduce((a,c)=>a+(c.price*c.qty),0),
+        createdAt: new Date().toISOString()
+      };
+      console.log('Order:', order);
+
+      cart = []; saveCart(); renderCart(); checkoutForm.reset();
+    });
+
+    function generateOrderNumber(){
+      const ts = Date.now().toString(36).toUpperCase();
+      const rand = Math.random().toString(36).substring(2,8).toUpperCase();
+      return `SE-${ts}-${rand}`;
+    }
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+    renderProducts(); renderCart();
+
+    document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeDrawer(); });
+  </script>
+</body>
+</html>

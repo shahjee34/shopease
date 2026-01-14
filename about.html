@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About - ShopEase</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1e3a8a, #6d28d9 60%, #0ea5e9);
+      color: #fff;
+    }
+    header {
+      background: rgba(0,0,0,0.6);
+      padding: 15px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: rgba(0,0,0,0.5);
+      padding: 30px;
+      border-radius: 10px;
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 26px;
+      border-bottom: 2px solid #4A90E2;
+      padding-bottom: 10px;
+    }
+    p {
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #ddd;
+    }
+  </style>
+</head>
+<body>
+  <header>ShopEase - About</header>
+
+  <div class="container">
+    <h2>About This Project</h2>
+    <p>
+      This is a project from <strong>Code Crafters</strong>, created as a 
+      <em>1st semester project</em>. The purpose of this project is to help 
+      students learn the fundamentals of web development, including HTML, CSS, 
+      and JavaScript.
+    </p>
+    <p>
+      By building ShopEase, we practiced how to design user interfaces, manage 
+      product data, implement cart functionality, and create a simple checkout 
+      flow. The project demonstrates how an e-commerce site works at a basic 
+      level, preparing us for more advanced development in future semesters.
+    </p>
+  </div>
+
+  <footer>© <span id="year"></span> ShopEase. All rights reserved.</footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
